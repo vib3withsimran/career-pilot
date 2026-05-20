@@ -100,9 +100,12 @@ export function SkeletonJobCard({ className = '' }) {
           </div>
           <SkeletonText lines={2} className="mt-2" />
           <div className="flex gap-2 mt-2">
-            {[40, 52, 36].map((w, i) => (
-              <SkeletonBlock key={i} className={`h-6 w-${w === 40 ? '16' : w === 52 ? '20' : '14'} rounded-md`} />
-            ))}
+          {['w-16', 'w-20', 'w-14'].map((width, i) => (
+  <SkeletonBlock
+    key={i}
+    className={`h-6 ${width} rounded-md`}
+  />
+))}
           </div>
         </div>
       </div>
@@ -276,9 +279,12 @@ export function SkeletonTracker({ className = '' }) {
 
         {/* Filters */}
         <div className="flex gap-2 mb-6">
-          {[20, 24, 32, 28, 24].map((w, i) => (
-            <SkeletonBlock key={i} className={`h-10 w-${w} rounded-lg`} />
-          ))}
+       {['w-20', 'w-24', 'w-32', 'w-28', 'w-24'].map((width, i) => (
+  <SkeletonBlock
+    key={i}
+    className={`h-10 ${width} rounded-lg`}
+  />
+))}
         </div>
 
         {/* Job Cards */}

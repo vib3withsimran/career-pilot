@@ -184,7 +184,13 @@ export default function Dashboard() {
                 { to: '/fellowship', icon: GraduationCap, label: 'Fellowship', sub: 'Earn & learn', color: 'primary', isNew: true },
               ].map((action, idx) => (
                 <Link key={idx} to={action.to} className="group">
-                  <div className={`relative p-5 rounded-2xl bg-card border border-border overflow-hidden transition-all duration-300 hover:border-${action.color} hover:shadow-xl hover:shadow-${action.color}/5 hover:-translate-y-1`}>
+                  <div className={`relative p-5 rounded-2xl bg-card border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+  action.color === 'primary'
+    ? 'hover:border-primary hover:shadow-primary/5'
+    : action.color === 'secondary'
+      ? 'hover:border-secondary hover:shadow-secondary/5'
+      : 'hover:border-emerald-500 hover:shadow-emerald-500/5'
+}`}>
                     {action.isNew && (
                       <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-primary/20 rounded text-[9px] text-primary font-black uppercase tracking-wider">NEW</div>
                     )}
