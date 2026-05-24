@@ -1,4 +1,5 @@
 import { auth } from '../config/firebase'
+import { decryptKey } from '../utils/encryption'
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
@@ -19,13 +20,13 @@ async function getAuthHeaders() {
     try {
       const aiConfig = JSON.parse(aiConfigStr);
       if (aiConfig.provider) headers['X-AI-Provider'] = aiConfig.provider;
-      if (aiConfig.apiKey) headers['X-AI-Key'] = aiConfig.apiKey;
+      if (aiConfig.apiKey) headers['X-AI-Key'] = decryptKey(aiConfig.apiKey);
       if (aiConfig.model) headers['X-AI-Model'] = aiConfig.model;
     } catch(e) {}
   } else {
     const openRouterKey = localStorage.getItem('openRouterApiKey');
     if (openRouterKey) {
-      headers['X-OpenRouter-Key'] = openRouterKey;
+      headers['X-OpenRouter-Key'] = decryptKey(openRouterKey);
     }
   }
 

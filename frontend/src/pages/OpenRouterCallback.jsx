@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { encryptKey } from '../utils/encryption';
 
 export default function OpenRouterCallback() {
   const navigate = useNavigate();
@@ -53,10 +54,11 @@ export default function OpenRouterCallback() {
 
         const data = await response.json();
         if (data.key) {
-          localStorage.setItem('openRouterApiKey', data.key);
+          const encryptedKey = encryptKey(data.key);
+          localStorage.setItem('openRouterApiKey', encryptedKey);
           const aiConfig = {
             provider: 'openrouter',
-            apiKey: data.key,
+            apiKey: encryptedKey,
             model: ''
           };
           localStorage.setItem('aiConfig', JSON.stringify(aiConfig));

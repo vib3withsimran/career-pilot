@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Bell, Mail, MessageSquare, FileText, Save, Cpu } from 'lucide-react'
 import { notificationApi, aiApi } from '../services/api'
+import { encryptKey, decryptKey } from '../utils/encryption'
 import Button from '../components/Button'
 import toast from 'react-hot-toast'
 import { SkeletonList } from '../components/ui/Skeleton'
@@ -44,12 +45,12 @@ export default function Settings() {
         const config = JSON.parse(aiConfigStr)
         setAiProvider(config.provider || '')
         setAiModel(config.model || '')
-        setAiKey(config.apiKey || '')
+        setAiKey(decryptKey(config.apiKey) || '')
       } else {
         const openRouterKey = localStorage.getItem('openRouterApiKey')
         if (openRouterKey) {
           setAiProvider('openrouter')
-          setAiKey(openRouterKey)
+          setAiKey(decryptKey(openRouterKey) || '')
         }
       }
     } catch (error) {
@@ -101,14 +102,14 @@ export default function Settings() {
     try {
       const aiConfig = {
         provider: aiProvider,
-        apiKey: aiKey,
+        apiKey: encryptKey(aiKey),
         model: aiModel
       }
       localStorage.setItem('aiConfig', JSON.stringify(aiConfig))
 
       // Keep legacy key updated if using OpenRouter
       if (aiProvider === 'openrouter' && aiKey) {
-        localStorage.setItem('openRouterApiKey', aiKey)
+        localStorage.setItem('openRouterApiKey', encryptKey(aiKey))
       } else if (!aiKey) {
         localStorage.removeItem('openRouterApiKey')
       }
