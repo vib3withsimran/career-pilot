@@ -38,6 +38,7 @@ export default function PostEditor({ onClose, onSubmit, editPost = null }) {
   const [error, setError] = useState('');
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduledAt, setScheduledAt] = useState(null);
+  const [showPoll, setShowPoll] = useState(false);
 
   // Attachment state — store File object + local preview URL
   const [imageFile, setImageFile] = useState(null);       // File object
@@ -126,6 +127,58 @@ export default function PostEditor({ onClose, onSubmit, editPost = null }) {
       ...(scheduledAt && { scheduledAt }),
     };
   };
+const [pollQuestion, setPollQuestion] = useState('');
+
+const [pollOptions, setPollOptions] = useState([
+  '',
+  ''
+]);
+
+  const buildPostData = () => {
+ const buildPostData = () => {
+  const normalizedOptions = pollOptions
+    .map(option => option.trim())
+    .filter(Boolean);
+
+  const trimmedQuestion = pollQuestion.trim();
+
+  const isValidPoll =
+    trimmedQuestion.length > 0 &&
+    normalizedOptions.length >= 2;
+
+  return {
+    title: title.trim(),
+    content: content.trim(),
+    category,
+    tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+
+    ...(showPoll && isValidPoll && {
+      poll: {
+        question: trimmedQuestion,
+        options: normalizedOptions
+      }
+    }),
+
+    ...(scheduledAt && { scheduledAt })
+  };
+};
+
+  return {
+    title: title.trim(),
+    content: content.trim(),
+    category,
+    tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+
+    ...(showPoll && {
+      poll: {
+        question: pollQuestion.trim(),
+        options: validOptions
+      }
+    }),
+
+    ...(scheduledAt && { scheduledAt })
+  };
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -148,7 +201,24 @@ export default function PostEditor({ onClose, onSubmit, editPost = null }) {
   };
 
   const clearSchedule = () => setScheduledAt(null);
+const addPollOption = () => {
+  if (pollOptions.length < 6) {
+    setPollOptions([...pollOptions, '']);
+  }
+};
 
+const updatePollOption = (index, value) => {
+  const updated = [...pollOptions];
+  updated[index] = value;
+  setPollOptions(updated);
+};
+
+const removePollOption = (index) => {
+  if (pollOptions.length > 2) {
+    const updated = pollOptions.filter((_, i) => i !== index);
+    setPollOptions(updated);
+  }
+};
   return (
     <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
       <div className="bg-card border border-border rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -253,6 +323,62 @@ export default function PostEditor({ onClose, onSubmit, editPost = null }) {
             </div>
 
             {/* Preview of tags */}
+            {showPoll && (
+  <div className="space-y-4 border border-border rounded-xl p-4 bg-muted/30">
+
+    <div>
+      <label className="block text-sm font-medium mb-2">
+        Poll Question
+      </label>
+
+      <input
+        type="text"
+        value={pollQuestion}
+        onChange={(e) => setPollQuestion(e.target.value)}
+        placeholder="Ask your poll question..."
+        className="w-full px-4 py-2 rounded-lg bg-muted border border-border"
+      />
+    </div>
+
+    <div className="space-y-2">
+      {pollOptions.map((option, index) => (
+        <div key={index} className="flex gap-2">
+
+          <input
+            type="text"
+            value={option}
+            onChange={(e) =>
+              updatePollOption(index, e.target.value)
+            }
+            placeholder={`Option ${index + 1}`}
+            className="flex-1 px-4 py-2 rounded-lg bg-muted border border-border"
+          />
+
+          {pollOptions.length > 2 && (
+            <button
+  type="button"
+  onClick={() => removePollOption(index)}
+  aria-label={`Remove poll option ${index + 1}`}
+  className="px-3 py-2 bg-red-500 text-white rounded-lg"
+>
+  X
+</button>
+          )}
+        </div>
+      ))}
+    </div>
+
+    {pollOptions.length < 6 && (
+      <button
+        type="button"
+        onClick={addPollOption}
+        className="px-4 py-2 bg-primary text-white rounded-lg"
+      >
+        Add Option
+      </button>
+    )}
+  </div>
+)}
             {tags && (
               <div className="flex flex-wrap gap-1.5">
                 {tags.split(',').map(tag => tag.trim()).filter(Boolean).map(tag => (
@@ -395,6 +521,32 @@ export default function PostEditor({ onClose, onSubmit, editPost = null }) {
                 <FileText className="w-5 h-5" />
               </button>
             </div>
+  <button
+    type="button"
+    className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+    title="Add image"
+  >
+    <ImageIcon className="w-5 h-5" />
+  </button>
+
+  <button
+    type="button"
+    className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+    title="Add link"
+  >
+    <Link className="w-5 h-5" />
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setShowPoll(!showPoll)}
+    aria-label={showPoll ? 'Remove poll' : 'Add poll'}
+    className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg"
+    title="Add Poll"
+  >
+    📊
+  </button>
+</div>
 
             <div className="flex gap-2">
               <button

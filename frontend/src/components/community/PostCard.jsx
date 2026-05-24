@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
   Heart,
@@ -13,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import CommentSection from './CommentSection';
 
 export default function PostCard({
@@ -24,11 +24,7 @@ export default function PostCard({
 }) {
   const [showFullContent, setShowFullContent] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [commentCount, setCommentCount] = useState(
-    post.commentCount || 0
-  );
-
-  const navigate = useNavigate();
+  const [commentCount, setCommentCount] = useState(post.commentCount || 0);
 
   const isOwn = post.author.uid === currentUser?.uid;
 
@@ -248,7 +244,15 @@ export default function PostCard({
           {shouldTruncate &&
           !showFullContent ? (
             <>
-              <ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                disallowedElements={['script', 'iframe', 'style']}
+                components={{
+                  a: ({ node, ...props }) => (
+                    <a {...props} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" />
+                  ),
+                }}
+              >
                 {previewText + '...'}
               </ReactMarkdown>
 
@@ -262,7 +266,15 @@ export default function PostCard({
               </button>
             </>
           ) : (
-            <ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              disallowedElements={['script', 'iframe', 'style']}
+              components={{
+                a: ({ node, ...props }) => (
+                  <a {...props} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" />
+                ),
+              }}
+            >
               {post.content}
             </ReactMarkdown>
           )}
