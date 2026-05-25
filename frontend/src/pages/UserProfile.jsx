@@ -7,11 +7,12 @@ import {
   FileText, Mic, Heart, MessageSquare, Calendar,
   Plus, ExternalLink
 } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 import { userProfileApi } from '../services/api'
 import Button from '../components/Button'
 import Input from '../components/Input'
 import AnalysisSkeleton from '../components/github/AnalysisSkeleton'
+import { SkeletonList } from '../components/ui/Skeleton'
 
 const AVATAR_GRADIENTS = [
   'from-indigo-500 to-purple-600',
