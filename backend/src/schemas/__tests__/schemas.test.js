@@ -15,7 +15,7 @@ import assert from 'node:assert/strict';
 import { z } from 'zod';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
-import { updateNotificationPrefsSchema } from '../auth.schema.js';
+import { updateNotificationPrefsSchema, registerSchema, loginSchema } from '../auth.schema.js';
 
 describe('auth.schema — updateNotificationPrefsSchema', () => {
   test('accepts valid boolean prefs', () => {
@@ -40,6 +40,128 @@ describe('auth.schema — updateNotificationPrefsSchema', () => {
       proposalUpdates: null,
     });
     assert.ok(!result.success);
+  });
+});
+
+describe('auth.schema — registerSchema', () => {
+  const valid = { name: 'Alice Example', email: 'alice@example.com', password: 'Secret1pass' };
+
+  test('accepts a fully valid registration body', () => {
+    const result = registerSchema.safeParse(valid);
+    assert.ok(result.success, JSON.stringify(result.error?.issues));
+  });
+
+  test('normalises email to lowercase', () => {
+    const result = registerSchema.safeParse({ ...valid, email: 'Alice@EXAMPLE.COM' });
+    assert.ok(result.success);
+    assert.equal(result.data.email, 'alice@example.com');
+  });
+
+  test('rejects name shorter than 2 characters', () => {
+    const result = registerSchema.safeParse({ ...valid, name: 'A' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'name'));
+  });
+
+  test('rejects name longer than 50 characters', () => {
+    const result = registerSchema.safeParse({ ...valid, name: 'A'.repeat(51) });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'name'));
+  });
+
+  test('rejects an invalid email format', () => {
+    const result = registerSchema.safeParse({ ...valid, email: 'not-an-email' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'email'));
+  });
+
+  test('rejects a password shorter than 8 characters', () => {
+    const result = registerSchema.safeParse({ ...valid, password: 'Ab1' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'password'));
+  });
+
+  test('rejects a password with no uppercase letter', () => {
+    const result = registerSchema.safeParse({ ...valid, password: 'alllower1' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'password'));
+  });
+
+  test('rejects a password with no digit', () => {
+    const result = registerSchema.safeParse({ ...valid, password: 'NoDigitsHere' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'password'));
+  });
+
+  test('rejects a password with no lowercase letter', () => {
+    const result = registerSchema.safeParse({ ...valid, password: 'ALLCAPS123' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'password'));
+  });
+
+  test('rejects a missing email', () => {
+    const { email, ...rest } = valid;
+    const result = registerSchema.safeParse(rest);
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'email'));
+  });
+
+  test('rejects a missing password', () => {
+    const { password, ...rest } = valid;
+    const result = registerSchema.safeParse(rest);
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'password'));
+  });
+
+  test('trims leading/trailing whitespace from name', () => {
+    const result = registerSchema.safeParse({ ...valid, name: '  Alice  ' });
+    assert.ok(result.success);
+    assert.equal(result.data.name, 'Alice');
+  });
+});
+
+describe('auth.schema — loginSchema', () => {
+  const valid = { email: 'alice@example.com', password: 'anypassword' };
+
+  test('accepts a valid login body', () => {
+    const result = loginSchema.safeParse(valid);
+    assert.ok(result.success, JSON.stringify(result.error?.issues));
+  });
+
+  test('normalises email to lowercase', () => {
+    const result = loginSchema.safeParse({ ...valid, email: 'ALICE@EXAMPLE.COM' });
+    assert.ok(result.success);
+    assert.equal(result.data.email, 'alice@example.com');
+  });
+
+  test('rejects an invalid email format', () => {
+    const result = loginSchema.safeParse({ ...valid, email: 'bad-email' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'email'));
+  });
+
+  test('rejects an empty password string', () => {
+    const result = loginSchema.safeParse({ ...valid, password: '' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'password'));
+  });
+
+  test('rejects a missing email field', () => {
+    const result = loginSchema.safeParse({ password: 'somepass' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'email'));
+  });
+
+  test('rejects a missing password field', () => {
+    const result = loginSchema.safeParse({ email: 'alice@example.com' });
+    assert.ok(!result.success);
+    assert.ok(result.error.issues.some((e) => e.path[0] === 'password'));
+  });
+
+  test('rejects an empty body', () => {
+    const result = loginSchema.safeParse({});
+    assert.ok(!result.success);
+    assert.equal(result.error.issues.length, 2);
   });
 });
 

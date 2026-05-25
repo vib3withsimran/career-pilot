@@ -1,12 +1,13 @@
 import express from 'express';
-import { asyncHandler } from '../middleware/errorHandler.js';
+import bcrypt from 'bcryptjs';
+import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
 import { verifyToken } from '../middleware/auth.js';
 import { loginProtection } from '../middleware/loginProtection.js';
 import { saveUserToFirebase } from '../services/firebaseDataService.js';
 import { validate } from '../middleware/validate.js';
 import { updateNotificationPrefsSchema } from '../schemas/auth.schema.js';
 
-import { registerSchema } from '../validators/authValidator.js';
+import { registerSchema, loginSchema } from '../validators/authValidator.js';
 import { exchangeCodeForToken, getLinkedInAuthUrl, getLinkedInProfile } from '../services/linkedinService.js';
 import User from '../models/User.model.js';
 import admin from '../config/firebase.js';
@@ -16,23 +17,76 @@ const router = express.Router();
 const stateStore = new Map();
 const tokenStore = new Map(); // one-time token exchange store
 
-// Example register endpoint with validation
 router.post('/register', validate(registerSchema), asyncHandler(async (req, res) => {
-  const { email, name } = req.body;
+  const { email, name, password } = req.body;
+
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return res.status(400).json({ success: false, error: 'User already exists' });
   }
-  const user = await User.create({
-    email,
-    username: name,
-  });
+
+  // Explicitly hash here even though the pre-save hook also guards this path,
+  // so password is never accidentally persisted as plaintext if the hook is bypassed
+  // (e.g. via Model.updateOne or direct driver access in future code paths).
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  const user = await User.create({ email, username: name, password: passwordHash });
+
   res.status(201).json({
     success: true,
     message: 'User registered successfully',
-    user: { id: user._id, email: user.email, name: user.username }
+    user: { id: user._id, email: user.email, name: user.username },
   });
 }));
+
+// Uniform error message on both "wrong email" and "wrong password" paths
+// prevents user enumeration via differing error strings or timing.
+router.post('/login', loginProtection, validate(loginSchema), asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email }).select('+password');
+
+  const rejectWithUniform = () => {
+    throw new ApiError(401, 'Invalid email or password');
+  };
+
+  if (!user || !user.password) rejectWithUniform();
+
+  const passwordMatches = await user.comparePassword(password);
+  if (!passwordMatches) rejectWithUniform();
+
+  if (user.requiresPasswordReset) {
+    return res.status(403).json({
+      success: false,
+      error: 'A password reset is required before you can log in. Please check your email for reset instructions.',
+      requiresPasswordReset: true,
+    });
+  }
+
+  // Create or retrieve the Firebase user so we can issue a custom token
+  // that the frontend can exchange for a Firebase ID token.
+  let firebaseUid;
+  try {
+    const firebaseUser = await admin.auth().getUserByEmail(email);
+    firebaseUid = firebaseUser.uid;
+  } catch {
+    const firebaseUser = await admin.auth().createUser({
+      email,
+      displayName: user.username,
+    });
+    firebaseUid = firebaseUser.uid;
+  }
+
+  const customToken = await admin.auth().createCustomToken(firebaseUid);
+
+  res.json({
+    success: true,
+    message: 'Login successful',
+    token: customToken,
+    user: { id: user._id, email: user.email, name: user.username },
+  });
+}));
+
 // Periodic sweep of expired store entries every 10 minutes to prevent memory leaks
 setInterval(() => {
   const now = Date.now();
