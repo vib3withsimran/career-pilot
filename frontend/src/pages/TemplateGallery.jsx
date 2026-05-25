@@ -384,7 +384,7 @@ export default function TemplateGallery() {
           </span>
           <h2 className="text-lg font-semibold text-foreground/70">Culinary Restaurant Theme — About Section</h2>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-[#c5a880]/20">
+        <div className="overflow-hidden rounded-2xl border border-border">
           <CulinaryAbout />
         </div>
       </div>
