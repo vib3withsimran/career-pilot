@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -76,6 +76,20 @@ const fadeUp = {
 };
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
+
+const sanitizeExternalUrl = (url) => {
+  if (typeof url !== 'string') return '#';
+
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) return '#';
+
+  try {
+    const parsedUrl = new URL(trimmedUrl);
+    return ['http:', 'https:', 'mailto:'].includes(parsedUrl.protocol) ? trimmedUrl : '#';
+  } catch {
+    return '#';
+  }
+};
 
 function GlassPanel({ children, className = '' }) {
   return (
@@ -158,9 +172,25 @@ function ProgressTracker({ unlockedCount, activeQuestion, totalQuestions }) {
   );
 }
 
-function QuizCard({ question, questionIndex, totalQuestions, disabled, onCorrect }) {
+function QuizCard({ question, questionIndex, totalQuestions, disabled, onCorrect, resetSignal }) {
   const [selected, setSelected] = useState('');
   const [isCorrect, setIsCorrect] = useState(null);
+  const unlockTimeoutRef = useRef(null);
+
+  const clearUnlockTimeout = useCallback(() => {
+    if (unlockTimeoutRef.current) {
+      window.clearTimeout(unlockTimeoutRef.current);
+      unlockTimeoutRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    clearUnlockTimeout();
+    setSelected('');
+    setIsCorrect(null);
+  }, [clearUnlockTimeout, resetSignal]);
+
+  useEffect(() => clearUnlockTimeout, [clearUnlockTimeout]);
 
   const chooseAnswer = (option) => {
     if (disabled || isCorrect === true) return;
@@ -170,10 +200,12 @@ function QuizCard({ question, questionIndex, totalQuestions, disabled, onCorrect
     setIsCorrect(correct);
 
     if (correct) {
-      setTimeout(() => {
+      clearUnlockTimeout();
+      unlockTimeoutRef.current = window.setTimeout(() => {
         onCorrect();
         setSelected('');
         setIsCorrect(null);
+        unlockTimeoutRef.current = null;
       }, 650);
     }
   };
@@ -284,7 +316,7 @@ function QuizCard({ question, questionIndex, totalQuestions, disabled, onCorrect
 
 function LockedOverlay({ title }) {
   return (
-    <div className="flex min-h-36 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-slate-950/60 p-4 text-center sm:min-h-40 sm:rounded-3xl sm:p-6">
+    <div className="relative z-10 flex min-h-36 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-slate-950/60 p-4 text-center sm:min-h-40 sm:rounded-3xl sm:p-6">
       <div className="grid h-14 w-14 place-items-center rounded-2xl border border-fuchsia-300/30 bg-fuchsia-300/10 text-fuchsia-100 shadow-lg shadow-fuchsia-500/10">
         <Lock className="h-6 w-6" />
       </div>
@@ -484,6 +516,9 @@ function Projects({ projects }) {
 }
 
 function ProjectCard({ project, index }) {
+  const liveUrl = sanitizeExternalUrl(project.liveUrl);
+  const githubUrl = sanitizeExternalUrl(project.githubUrl);
+
   return (
     <Motion.article
       whileHover={{ y: -6 }}
@@ -517,12 +552,12 @@ function ProjectCard({ project, index }) {
         </div>
         <div className="mt-5 flex flex-wrap gap-3">
           {project.liveUrl && (
-            <a href={project.liveUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-cyan-100">
+            <a href={liveUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-cyan-100">
               Live <ExternalLink className="h-4 w-4" />
             </a>
           )}
           {project.githubUrl && (
-            <a href={project.githubUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-white transition hover:border-fuchsia-200 hover:bg-fuchsia-300/10">
+            <a href={githubUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-white transition hover:border-fuchsia-200 hover:bg-fuchsia-300/10">
               Code <Github className="h-4 w-4" />
             </a>
           )}
@@ -596,10 +631,10 @@ function Testimonials({ testimonials }) {
 
 function Contact({ personal, socials }) {
   const links = [
-    { label: 'Email', value: socials?.email, href: socials?.email ? `mailto:${socials.email}` : '', icon: Mail },
-    { label: 'GitHub', value: socials?.github, href: socials?.github, icon: Github },
-    { label: 'LinkedIn', value: socials?.linkedin, href: socials?.linkedin, icon: Linkedin },
-    { label: 'Twitter', value: socials?.twitter, href: socials?.twitter, icon: Twitter },
+    { label: 'Email', value: socials?.email, href: sanitizeExternalUrl(socials?.email ? `mailto:${socials.email}` : ''), icon: Mail },
+    { label: 'GitHub', value: socials?.github, href: sanitizeExternalUrl(socials?.github), icon: Github },
+    { label: 'LinkedIn', value: socials?.linkedin, href: sanitizeExternalUrl(socials?.linkedin), icon: Linkedin },
+    { label: 'Twitter', value: socials?.twitter, href: sanitizeExternalUrl(socials?.twitter), icon: Twitter },
   ].filter((link) => link.value);
 
   return (
@@ -643,6 +678,7 @@ export default function QuizReveal() {
   const testimonials = safeArray(portfolio.testimonials);
 
   const [unlockedCount, setUnlockedCount] = useState(1);
+  const [resetSignal, setResetSignal] = useState(0);
   const currentQuestionIndex = Math.min(unlockedCount - 1, quizQuestions.length);
   const isComplete = unlockedCount === sectionMeta.length;
 
@@ -651,6 +687,7 @@ export default function QuizReveal() {
   };
 
   const resetQuest = () => {
+    setResetSignal((signal) => signal + 1);
     setUnlockedCount(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -723,6 +760,7 @@ export default function QuizReveal() {
                   totalQuestions={quizQuestions.length}
                   disabled={isComplete}
                   onCorrect={unlockNext}
+                  resetSignal={resetSignal}
                 />
               </Motion.div>
             </AnimatePresence>
