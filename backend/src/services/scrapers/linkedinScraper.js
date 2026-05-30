@@ -1,3 +1,5 @@
+import path from 'path';
+import os from 'os';
 import puppeteer from 'puppeteer';
 import { BaseScraper } from './BaseScraper.js';
 
@@ -138,7 +140,9 @@ export class LinkedInScraper extends BaseScraper {
                 );
             } catch (waitErr) {
                 // Capture error state for debugging
-                await page.screenshot({ path: 'linkedin_error.png', fullPage: true }).catch(() => { });
+                const screenshotPath = path.join(os.tmpdir(), 'linkedin_error.png');
+                await page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => { });
+                this.log(`Debug screenshot saved to: ${screenshotPath}`, 'warn');
                 const title = await page.title();
 
                 this.log(`Job cards not found. Page title: "${title}"`, 'warn');
