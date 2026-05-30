@@ -21,6 +21,7 @@ import CommandPalette from './components/CommandPalette';
 import BackToTop from './components/BackToTop';
 import Home from './pages/Home';
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Analytics = lazy(() => import('./pages/Analytics'));
 const JobSearch = lazy(() => import('./pages/JobSearch'));
 const ResumeBuilder = lazy(() => import('./pages/ResumeBuilder'));
 import TextToResume from './pages/TextToResume';
@@ -245,6 +246,16 @@ function AppRoutes() {
     <ProtectedRoute>
       <Suspense fallback={<LoadingScreen label="Loading Dashboard..." />}>
         <Dashboard />
+      </Suspense>
+    </ProtectedRoute>
+  } 
+/>
+        <Route 
+  path="/dashboard/analytics" 
+  element={
+    <ProtectedRoute>
+      <Suspense fallback={<LoadingScreen label="Loading Analytics..." />}>
+        <Analytics />
       </Suspense>
     </ProtectedRoute>
   } 
