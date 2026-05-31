@@ -1270,12 +1270,13 @@ export const templates = [
     "title": "Morphing Blobs",
     "category": "Portfolio",
     "colorScheme": "Dark",
-    "layout": "Grid",
-    "author": "System",
-    "views": 1105,
-    "rating": 4.5,
+    "layout": "Interactive",
+    "author": "Vexx",
+    "views": 2700,
+    "rating": 4.9,
     "image": "/template-previews/Morphing_Blobs.png",
-    "createdAt": "2026-05-01"
+    "createdAt": "2026-05-31",
+    "isComplete": true
   },
   {
     "id": "Mosaic_Assemble",
