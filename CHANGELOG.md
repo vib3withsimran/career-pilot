@@ -1,3 +1,15 @@
+# [1.117.0](https://github.com/anurag3407/career-pilot/compare/v1.116.0...v1.117.0) (2026-06-01)
+
+
+### Bug Fixes
+
+* update author to Advik Divekar in templates.js ([22ec4ca](https://github.com/anurag3407/career-pilot/commit/22ec4cacc5394d2bec67b4085020b0a899a274a5))
+
+
+### Features
+
+* implement One Page Scroll portfolio template ([#1918](https://github.com/anurag3407/career-pilot/issues/1918)) ([306c172](https://github.com/anurag3407/career-pilot/commit/306c17216f70e9ee35d57961ed19956318e5f4b9)), closes [#2563](https://github.com/anurag3407/career-pilot/issues/2563)
+
 # [1.116.0](https://github.com/anurag3407/career-pilot/compare/v1.115.0...v1.116.0) (2026-06-01)
 
 
