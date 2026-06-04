@@ -1,3 +1,10 @@
+# [1.135.0](https://github.com/anurag3407/career-pilot/compare/v1.134.0...v1.135.0) (2026-06-04)
+
+
+### Features
+
+* implement Ocean Depths portfolio template with full underwater scene ([8041748](https://github.com/anurag3407/career-pilot/commit/80417489eb77155cae2dde41de123a85e0dcb85c)), closes [#1863](https://github.com/anurag3407/career-pilot/issues/1863)
+
 # [1.134.0](https://github.com/anurag3407/career-pilot/compare/v1.133.1...v1.134.0) (2026-06-03)
 
 
