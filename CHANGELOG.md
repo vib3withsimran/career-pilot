@@ -1,3 +1,16 @@
+# [1.136.0](https://github.com/anurag3407/career-pilot/compare/v1.135.0...v1.136.0) (2026-06-04)
+
+
+### Bug Fixes
+
+* **portfolio:** address review comments for cursor spotlight template ([a873c97](https://github.com/anurag3407/career-pilot/commit/a873c97efcb727dc794e7ad93f24f0754bcbc34e))
+
+
+### Features
+
+* complete modular implementation of Zoom Into Work portfolio template ([0f33f5d](https://github.com/anurag3407/career-pilot/commit/0f33f5dc4872ae0274f9823ea89d302c35cbd703))
+* **portfolio:** implement cursor spotlight animated template ([db5f03e](https://github.com/anurag3407/career-pilot/commit/db5f03e13ef418a0300f80e28ce283a260245c28))
+
 # [1.135.0](https://github.com/anurag3407/career-pilot/compare/v1.134.0...v1.135.0) (2026-06-04)
 
 
